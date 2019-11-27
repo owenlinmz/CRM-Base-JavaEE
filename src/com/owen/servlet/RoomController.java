@@ -99,23 +99,6 @@ public class RoomController extends HttpServlet {
 
     // 添加客房
     public void add(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
-//        Enumeration<String> parameterNames = request.getParameterNames();
-//        Room room = new Room();
-//        Class<? extends Room> clazz = room.getClass();
-//        while (parameterNames.hasMoreElements()) {
-//            String name = parameterNames.nextElement();
-//            String value = request.getParameter(name);
-//            Method method = Arrays.stream(clazz.getDeclaredMethods())
-//                    .filter(it -> it.getName().equals(this.buildGetterMethod(name)))
-//                    .findFirst()
-//                    .orElseThrow(RuntimeException::new);
-//            if (method.getParameterTypes()[0].getName().equals("int")) {
-//                method.invoke(room, Integer.parseInt(value));
-//            } else {
-//                method.invoke(room, value);
-//            }
-//
-//        }
         Room room = getParamFromReq(request);
         Connection connection = null;
         PrintWriter out = response.getWriter();
@@ -172,11 +155,10 @@ public class RoomController extends HttpServlet {
         Room room = getParamFromReq(request);
         Connection connection = null;
         PrintWriter out = response.getWriter();
-        boolean result = true;
         try {
             connection = JDBCConnection.getConnection();
             connection.setAutoCommit(true);
-            String sql = "update hotel set  " + " `floor` = " + room.getFloor() + ", `bed` = " + room.getBed() + ", price = " + room.getPrice() + ", `type` = " + "\""  +room.getType() + "\"" +" where `id` = " + room.getId();
+            String sql = "update hotel set  " + " `floor` = " + room.getFloor() + ", `bed` = " + room.getBed() + ", price = " + room.getPrice() + ", `type` = " + "\"" + room.getType() + "\"" + " where `id` = " + room.getId();
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.execute();
         } catch (Exception e) {
@@ -186,7 +168,64 @@ public class RoomController extends HttpServlet {
         } finally {
             JDBCConnection.close(connection);
         }
-        out.println(result);
+        out.println(true);
+    }
+
+    // 变更客房状态
+    public void changeStatus(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        String status = request.getParameter("status");
+        Connection connection = null;
+        PrintWriter out = response.getWriter();
+        try {
+            connection = JDBCConnection.getConnection();
+            connection.setAutoCommit(true);
+            String checkSql = "select count(1) from hotel_customer where id = " + id;
+            PreparedStatement preparedStatement = connection.prepareStatement(checkSql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next() && resultSet.getInt("count(1)") != 0) {
+                out.println("false");
+                return;
+            }
+
+            String updateSql = "update hotel set `status` = " + "\"" + status + "\"" + " where `id` = " + id;
+            preparedStatement = connection.prepareStatement(updateSql);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            out.println("false");
+            return;
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        out.println(true);
+    }
+
+    // 删除客房
+    public void delete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Connection connection = null;
+        PrintWriter out = response.getWriter();
+        try {
+            connection = JDBCConnection.getConnection();
+            connection.setAutoCommit(true);
+            String checkSql = "select count(1) from hotel_customer where id = " + id;
+            PreparedStatement preparedStatement = connection.prepareStatement(checkSql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next() && resultSet.getInt("count(1)") != 0) {
+                out.println("false");
+                return;
+            }
+            preparedStatement = connection.prepareStatement("delete from hotel where `id` = " + id);
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            out.println("false");
+            return;
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        out.println(true);
     }
 
     private String buildGetterMethod(String fieldName) {

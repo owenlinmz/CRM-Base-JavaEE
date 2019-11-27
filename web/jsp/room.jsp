@@ -385,17 +385,19 @@
 
     function deleteRoom(id) {
         if (confirm('确实要删除该客房吗?')) {
-            $.post("<%=basePath%>api/Room/add", {"id": id}, function (data) {
-                alert("客房删除成功！");
-                window.location.reload();
+            $.post("<%=basePath%>api/Room/delete", {"id": id}, function (data) {
+                if (JSON.parse(data)) {
+                    alert("客房删除成功！");
+                    window.location.reload();
+                } else {
+                    alert("客房删除失败！有客人入住！");
+                }
             });
         }
     }
 
     function addRoom() {
         $.post("<%=basePath%>api/Room/add", $("#add_room_form").serialize(), function (data) {
-            debugger
-            console.log("data is:" + data)
             if (JSON.parse(data)) {
                 alert("客房信息添加成功！");
                 window.location.reload();
@@ -423,8 +425,8 @@
             newStatus = '正常'
         }
         if (confirm(msg)) {
-            $.post("<%=basePath%>room/changeStatus.action", {"id": id, "status": newStatus}, function (data) {
-                if (data) {
+            $.post("<%=basePath%>api/Room/changeStatus", {"id": id, "status": newStatus}, function (data) {
+                if (JSON.parse(data)) {
                     alert(successMsg);
                     window.location.reload();
                 } else {
