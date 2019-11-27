@@ -110,32 +110,33 @@
                       method="post">
                     <div class="form-group">
                         <label for="roomNumber">房间号</label> <input type="text"
-                                                              class="form-control" id="roomNumber" value="${roomNumber}"
-                                                              name="roomNumber">
+                                                                   class="form-control" id="roomNumber"
+                                                                   value="${roomNumber}"
+                                                                   name="roomNumber">
                     </div>
                     <div class="form-group">
                         <label for="floor">楼层</label> <input type="number"
-                                                                   class="form-control" id="floor"
-                                                                   value="${floor}"
-                                                                   name="floor" min="1" max="10">
+                                                             class="form-control" id="floor"
+                                                             value="${floor}"
+                                                             name="floor" min="1" max="10">
                     </div>
                     <div class="form-group">
                         <label for="bed">床位数量</label> <input type="number"
-                                                                   class="form-control" id="bed"
-                                                                   value="${bed}"
-                                                                   name="bed" min="1" max="3">
+                                                             class="form-control" id="bed"
+                                                             value="${bed}"
+                                                             name="bed" min="1" max="3">
                     </div>
                     <div class="form-group">
                         <label for="type">类型</label> <input type="text"
-                                                                   class="form-control" id="type"
-                                                                   value="${type}"
-                                                                   name="type">
+                                                            class="form-control" id="type"
+                                                            value="${type}"
+                                                            name="type">
                     </div>
                     <div class="form-group">
                         <label for="status">状态</label> <input type="status"
-                                                                   class="form-control" id="status"
-                                                                   value="${status}"
-                                                                   name="status">
+                                                              class="form-control" id="status"
+                                                              value="${status}"
+                                                              name="status">
                     </div>
                     &nbsp;&nbsp;
                     <button type="submit" class="btn btn-primary">查询</button>
@@ -161,9 +162,9 @@
                             <th>房间号</th>
                             <th>楼层</th>
                             <th>床位数量</th>
-							<th>类型</th>
-							<th>每晚房间价格</th>
-							<th>状态</th>
+                            <th>类型</th>
+                            <th>每晚房间价格</th>
+                            <th>状态</th>
                             <th>操作</th>
                         </tr>
                         </thead>
@@ -172,17 +173,18 @@
                             <tr>
                                 <td>${row.id}</td>
                                 <td>${row.roomNumber}</td>
-								<td>${row.floor}</td>
-								<td>${row.bed}</td>
-								<td>${row.type}</td>
-								<td>${row.price}</td>
-								<td>${row.status}</td>
+                                <td>${row.floor}</td>
+                                <td>${row.bed}</td>
+                                <td>${row.type}</td>
+                                <td>${row.price}</td>
+                                <td>${row.status}</td>
                                 <td><a href="#" class="btn btn-primary btn-xs"
                                        data-toggle="modal" data-target="#roomEditDialog"
                                        onclick="editRoom(${row.id})">修改</a> <a href="#"
-                                                                                    class="btn btn-danger btn-xs"
-                                                                                    onclick="deleteRoom(${row.id})">删除</a>
-                                    <a href="#" class="btn btn-warning btn-xs" onclick="changeStatus(${row.id}, '${row.status}')">进入维修 / 恢复正常</a>
+                                                                               class="btn btn-danger btn-xs"
+                                                                               onclick="deleteRoom(${row.id})">删除</a>
+                                    <a href="#" class="btn btn-warning btn-xs"
+                                       onclick="changeStatus(${row.id}, '${row.status}')">进入维修 / 恢复正常</a>
                                 </td>
                             </tr>
                         </c:forEach>
@@ -356,7 +358,7 @@
     function editRoom(id) {
         $.ajax({
             type: "get",
-            url: "<%=basePath%>room/edit.action",
+            url: "<%=basePath%>api/Room/get",
             data: {"id": id},
             success: function (data) {
                 $("#edit_id").val(data.id);
@@ -371,15 +373,19 @@
     }
 
     function updateRoom() {
-        $.post("<%=basePath%>room/update.action", $("#edit_room_form").serialize(), function (data) {
-            alert("客房信息更新成功！");
-            window.location.reload();
+        $.post("<%=basePath%>api/Room/update", $("#edit_room_form").serialize(), function (data) {
+            if (JSON.parse(data)) {
+                alert("客房信息更新成功！");
+                window.location.reload();
+            } else {
+                alert("客房信息更新失败！");
+            }
         });
     }
 
     function deleteRoom(id) {
         if (confirm('确实要删除该客房吗?')) {
-            $.post("<%=basePath%>room/delete.action", {"id": id}, function (data) {
+            $.post("<%=basePath%>api/Room/add", {"id": id}, function (data) {
                 alert("客房删除成功！");
                 window.location.reload();
             });
@@ -390,7 +396,7 @@
         $.post("<%=basePath%>api/Room/add", $("#add_room_form").serialize(), function (data) {
             debugger
             console.log("data is:" + data)
-            if (JSON.parse(data)){
+            if (JSON.parse(data)) {
                 alert("客房信息添加成功！");
                 window.location.reload();
             } else {
@@ -411,14 +417,14 @@
             msg = '是否维修该客房？';
             successMsg = '客房进入维修状态！';
             newStatus = '维修'
-        }else {
+        } else {
             msg = '是否恢复该客房？';
             successMsg = '客房恢复正常状态！';
             newStatus = '正常'
         }
         if (confirm(msg)) {
             $.post("<%=basePath%>room/changeStatus.action", {"id": id, "status": newStatus}, function (data) {
-                if (data){
+                if (data) {
                     alert(successMsg);
                     window.location.reload();
                 } else {
@@ -429,11 +435,6 @@
         }
     }
 
-    <%--$(document).ready(function () {--%>
-    <%--    $.get("<%=basePath%>api/Room/list", function (data) {--%>
-    <%--        // console.log(data)--%>
-    <%--    });--%>
-    <%--})--%>
 </script>
 </body>
 

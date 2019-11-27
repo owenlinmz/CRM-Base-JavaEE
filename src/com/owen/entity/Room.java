@@ -2,7 +2,7 @@ package com.owen.entity;
 
 public class Room {
 
-    private long id;
+    private int id;
 
     private String roomNumber;
 
@@ -16,7 +16,7 @@ public class Room {
 
     private int price;
 
-    public Room(long id, String roomNumber, String type, String status, int floor, int bed, int price) {
+    public Room(int id, String roomNumber, String type, String status, int floor, int bed, int price) {
         this.id = id;
         this.roomNumber = roomNumber;
         this.type = type;
@@ -31,18 +31,18 @@ public class Room {
 
     @Override
     public String toString() {
-        return "Room{" +
-                "id=" + id +
-                ", roomNumber='" + roomNumber + '\'' +
-                ", type='" + type + '\'' +
-                ", status='" + status + '\'' +
-                ", floor=" + floor +
-                ", bed=" + bed +
-                ", price=" + price +
+        return "{" +
+                "\"id\":" + id +
+                ", \"roomNumber\":" + "\"" + roomNumber + "\"" +
+                ", \"type\":" + "\"" + type + '\"' +
+                ", \"status\":" + "\"" + status + '\"' +
+                ", \"floor\":" + floor +
+                ", \"bed\":" + bed +
+                ", \"price\":" + price +
                 '}';
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -58,7 +58,7 @@ public class Room {
         this.status = status;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 

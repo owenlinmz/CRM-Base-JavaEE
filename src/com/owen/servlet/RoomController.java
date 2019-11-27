@@ -1,6 +1,7 @@
 package com.owen.servlet;
 
 import com.owen.page.Page;
+import com.sun.deploy.net.HttpResponse;
 import jdk.nashorn.internal.scripts.JD;
 import com.owen.BaseServlet;
 import com.owen.entity.Room;
@@ -35,16 +36,16 @@ public class RoomController extends HttpServlet {
         ArrayList<String> whereList = new ArrayList<String>();
         while (parameterNames.hasMoreElements()) {
             String name = parameterNames.nextElement();
-            if (name.equals("page")){
+            if (name.equals("page")) {
                 page.setPage(Integer.parseInt(request.getParameter(name)));
                 continue;
-            } else if (name.equals("rows") ){
+            } else if (name.equals("rows")) {
                 page.setSize(Integer.parseInt(request.getParameter(name)));
                 continue;
             }
             String value = request.getParameter(name);
             byte[] buf = value.getBytes("iso8859-1");
-            value = new String(buf,"utf-8");
+            value = new String(buf, "utf-8");
             if (!value.equals("")) {
                 whereList.add(String.format("%s = '%s'", name, value));
             }
@@ -54,7 +55,7 @@ public class RoomController extends HttpServlet {
         if (!whereList.isEmpty()) {
             whereStr = joinListToStr(whereList, " and ");
         }
-        if (whereStr != ""){
+        if (whereStr != "") {
             whereStr = " where " + whereStr;
         }
 
@@ -67,7 +68,7 @@ public class RoomController extends HttpServlet {
             PreparedStatement preparedStatement = connection.prepareStatement(String.format("select * from hotel%s limit %d, %d", whereStr, startRows, page.getSize()));
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                long id = resultSet.getLong(1);
+                int id = resultSet.getInt(1);
                 String roomNumber = resultSet.getString(2);
                 String type = resultSet.getString(7);
                 String status = resultSet.getString(5);
@@ -96,27 +97,26 @@ public class RoomController extends HttpServlet {
         request.getRequestDispatcher("/jsp/room.jsp").forward(request, response);
     }
 
-
     // 添加客房
     public void add(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
-        Enumeration<String> parameterNames = request.getParameterNames();
-        Room room = new Room();
-        Class<? extends Room> clazz = room.getClass();
-        while (parameterNames.hasMoreElements()) {
-            String name = parameterNames.nextElement();
-            String value = request.getParameter(name);
-            Method method = Arrays.stream(clazz.getDeclaredMethods())
-                    .filter(it -> it.getName().equals(this.buildGetterMethod(name)))
-                    .findFirst()
-                    .orElseThrow(RuntimeException::new);
-            if (method.getParameterTypes()[0].getName().equals("int")) {
-                method.invoke(room, Integer.parseInt(value));
-            } else {
-                method.invoke(room, value);
-            }
-
-        }
-
+//        Enumeration<String> parameterNames = request.getParameterNames();
+//        Room room = new Room();
+//        Class<? extends Room> clazz = room.getClass();
+//        while (parameterNames.hasMoreElements()) {
+//            String name = parameterNames.nextElement();
+//            String value = request.getParameter(name);
+//            Method method = Arrays.stream(clazz.getDeclaredMethods())
+//                    .filter(it -> it.getName().equals(this.buildGetterMethod(name)))
+//                    .findFirst()
+//                    .orElseThrow(RuntimeException::new);
+//            if (method.getParameterTypes()[0].getName().equals("int")) {
+//                method.invoke(room, Integer.parseInt(value));
+//            } else {
+//                method.invoke(room, value);
+//            }
+//
+//        }
+        Room room = getParamFromReq(request);
         Connection connection = null;
         PrintWriter out = response.getWriter();
         try {
@@ -135,6 +135,60 @@ public class RoomController extends HttpServlet {
         out.println("true");
     }
 
+    // 获取单个客房信息
+    public void get(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // 解决返回中文乱码
+        response.setContentType("text/json;charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        Connection connection = null;
+        PrintWriter out = response.getWriter();
+        try {
+            connection = JDBCConnection.getConnection();
+            String sql = String.format("select * from hotel where id = %d", id);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String roomNumber = resultSet.getString(2);
+                String type = resultSet.getString(7);
+                String status = resultSet.getString(5);
+                int floor = resultSet.getInt(3);
+                int bed = resultSet.getInt(4);
+                int price = resultSet.getInt(6);
+                Room room = new Room(id, roomNumber, type, status, floor, bed, price);
+                out.println(room.toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.println("false");
+        } finally {
+            JDBCConnection.close(connection);
+        }
+    }
+
+    // 修改客房
+    public void update(HttpServletRequest request, HttpServletResponse response) throws InvocationTargetException, IllegalAccessException, IOException {
+        Room room = getParamFromReq(request);
+        Connection connection = null;
+        PrintWriter out = response.getWriter();
+        boolean result = true;
+        try {
+            connection = JDBCConnection.getConnection();
+            connection.setAutoCommit(true);
+            String sql = "update hotel set  " + " `floor` = " + room.getFloor() + ", `bed` = " + room.getBed() + ", price = " + room.getPrice() + ", `type` = " + "\""  +room.getType() + "\"" +" where `id` = " + room.getId();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.println("false");
+            return;
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        out.println(result);
+    }
+
     private String buildGetterMethod(String fieldName) {
         String firstLetter = fieldName.substring(0, 1).toUpperCase();
         String suffix = fieldName.substring(1);
@@ -146,10 +200,31 @@ public class RoomController extends HttpServlet {
         for (int i = 0; i < strList.size(); i++) {
             if (i != strList.size() - 1) {
                 result.append(strList.get(i) + str);
-            }else {
+            } else {
                 result.append(strList.get(i));
             }
         }
         return result + "";
     }
+
+    private Room getParamFromReq(HttpServletRequest request) throws InvocationTargetException, IllegalAccessException {
+        Enumeration<String> parameterNames = request.getParameterNames();
+        Room room = new Room();
+        Class<? extends Room> clazz = room.getClass();
+        while (parameterNames.hasMoreElements()) {
+            String name = parameterNames.nextElement();
+            String value = request.getParameter(name);
+            Method method = Arrays.stream(clazz.getDeclaredMethods())
+                    .filter(it -> it.getName().equals(this.buildGetterMethod(name)))
+                    .findFirst()
+                    .orElseThrow(RuntimeException::new);
+            if (method.getParameterTypes()[0].getName().equals("int")) {
+                method.invoke(room, Integer.parseInt(value));
+            } else {
+                method.invoke(room, value);
+            }
+        }
+        return room;
+    }
 }
+
