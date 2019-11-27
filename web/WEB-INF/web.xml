@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+		  http://java.sun.com/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    <servlet>
+        <servlet-name>TestServlet</servlet-name>
+        <servlet-class>com.owen.TestServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TestServlet</servlet-name>
+        <url-pattern>/test</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>baseServlet</servlet-name>
+        <servlet-class>com.owen.BaseServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>baseServlet</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>roomServlet</servlet-name>
+        <servlet-class>com.owen.servlet.RoomController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>roomServlet</servlet-name>
+        <url-pattern>/room</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>room</servlet-name>
+        <jsp-file>/jsp/room.jsp</jsp-file>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>room</servlet-name>
+        <url-pattern>/room/list</url-pattern>
+    </servlet-mapping>
+
+    <jsp-config>
+        <taglib>
+            <taglib-uri>owenLin</taglib-uri>
+            <taglib-location>/tld/commons.tld</taglib-location>
+        </taglib>
+    </jsp-config>
+
+</web-app>
