@@ -82,11 +82,11 @@
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
                 <ul class="nav" id="side-menu">
-                    <li><a href="${pageContext.request.contextPath}/customer/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Customer/list"
                            class="active"><i class="fa fa-edit fa-fw"></i> 客户管理</a></li>
-                    <li><a href="${pageContext.request.contextPath}/room"
+                    <li><a href="${pageContext.request.contextPath}/api/Room/list"
                            class="active"><i class="fa fa-dashboard fa-fw"></i> 客房管理</a></li>
-                    <li><a href="${pageContext.request.contextPath}/record/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Record/list"
                            class="active"><i class="fa fa-dashboard fa-fw"></i> 入住信息管理</a></li>
                 </ul>
             </div>
@@ -106,7 +106,7 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <form class="form-inline"
-                      action="${pageContext.request.contextPath}/api/Room/getRooms"
+                      action="${pageContext.request.contextPath}/api/Room/list"
                       method="post">
                     <div class="form-group">
                         <label for="roomNumber">房间号</label> <input type="text"
@@ -190,7 +190,7 @@
                     </table>
                     <div class="col-md-12 text-right">
                         <owen:page
-                                url="${pageContext.request.contextPath}/api/Room/getRooms"/>
+                                url="${pageContext.request.contextPath}/api/Room/list"/>
                     </div>
                     <!-- /.panel-body -->
                 </div>
@@ -387,9 +387,15 @@
     }
 
     function addRoom() {
-        $.post("<%=basePath%>room/add.action", $("#add_room_form").serialize(), function (data) {
-            alert("客房信息添加成功！");
-            window.location.reload();
+        $.post("<%=basePath%>api/Room/add", $("#add_room_form").serialize(), function (data) {
+            debugger
+            console.log("data is:" + data)
+            if (JSON.parse(data)){
+                alert("客房信息添加成功！");
+                window.location.reload();
+            } else {
+                alert("客房信息添加失败！")
+            }
         });
     }
 
@@ -423,11 +429,11 @@
         }
     }
 
-    $(document).ready(function () {
-        $.get("<%=basePath%>api/Room/getRooms", function (data) {
-            // console.log(data)
-        });
-    })
+    <%--$(document).ready(function () {--%>
+    <%--    $.get("<%=basePath%>api/Room/list", function (data) {--%>
+    <%--        // console.log(data)--%>
+    <%--    });--%>
+    <%--})--%>
 </script>
 </body>
 

@@ -22,23 +22,23 @@
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
 
-    <servlet>
-        <servlet-name>roomServlet</servlet-name>
-        <servlet-class>com.owen.servlet.RoomController</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>roomServlet</servlet-name>
-        <url-pattern>/room</url-pattern>
-    </servlet-mapping>
+<!--    <servlet>-->
+<!--        <servlet-name>roomServlet</servlet-name>-->
+<!--        <servlet-class>com.owen.servlet.RoomController</servlet-class>-->
+<!--    </servlet>-->
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>roomServlet</servlet-name>-->
+<!--        <url-pattern>/room</url-pattern>-->
+<!--    </servlet-mapping>-->
 
-    <servlet>
-        <servlet-name>room</servlet-name>
-        <jsp-file>/jsp/room.jsp</jsp-file>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>room</servlet-name>
-        <url-pattern>/room/list</url-pattern>
-    </servlet-mapping>
+<!--    <servlet>-->
+<!--        <servlet-name>room</servlet-name>-->
+<!--        <jsp-file>/jsp/room.jsp</jsp-file>-->
+<!--    </servlet>-->
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>room</servlet-name>-->
+<!--        <url-pattern>/room</url-pattern>-->
+<!--    </servlet-mapping>-->
 
     <jsp-config>
         <taglib>

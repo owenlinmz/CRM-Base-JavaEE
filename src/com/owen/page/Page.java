@@ -9,6 +9,11 @@ public class Page<T> {
 	private int size;// 每页条数
 	private List<T> rows;// 分页后的结果集
 
+	public Page(int page, int size) {
+		this.page = page;
+		this.size = size;
+	}
+
 	public int getTotal() {
 		return total;
 	}
