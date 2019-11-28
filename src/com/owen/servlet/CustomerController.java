@@ -87,7 +87,7 @@ public class CustomerController {
         page.setTotal(count);
         page.setRows(list);
         servletContext.setAttribute("page", page);
-        request.getRequestDispatcher("/jsp/customer.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/customer.jsp").forward(request, response);
     }
 
     // 添加客户

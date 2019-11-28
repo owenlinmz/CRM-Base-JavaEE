@@ -89,7 +89,7 @@ public class RecordController {
         page.setTotal(count);
         page.setRows(list);
         servletContext.setAttribute("page", page);
-        request.getRequestDispatcher("/jsp/record.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/record.jsp").forward(request, response);
     }
 
     // 入住详情

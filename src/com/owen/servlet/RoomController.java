@@ -90,7 +90,7 @@ public class RoomController extends HttpServlet {
         page.setTotal(count);
         page.setRows(list);
         servletContext.setAttribute("page", page);
-        request.getRequestDispatcher("/jsp/room.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/jsp/room.jsp").forward(request, response);
     }
 
     // 添加客房
