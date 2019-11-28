@@ -1,9 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-         pageEncoding="UTF-8" isELIgnored="false"%>
+         pageEncoding="UTF-8" isELIgnored="false" %>
 <%@ page trimDirectiveWhitespaces="true" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="owen" uri="owenlin" %>
+<%@ taglib prefix="owen" uri="owenLin" %>
 <%
     String path = request.getContextPath();
     String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
@@ -80,11 +80,11 @@
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
                 <ul class="nav" id="side-menu">
-                    <li><a href="${pageContext.request.contextPath}/customer/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Customer/list"
                            class="active"><i class="fa fa-edit fa-fw"></i> 客户管理</a></li>
-                    <li><a href="${pageContext.request.contextPath}/room/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Room/list"
                            class="active"><i class="fa fa-dashboard fa-fw"></i> 客房管理</a></li>
-                    <li><a href="${pageContext.request.contextPath}/record/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Record/list"
                            class="active"><i class="fa fa-dashboard fa-fw"></i> 入住信息管理</a></li>
                 </ul>
             </div>
@@ -103,7 +103,7 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <form class="form-inline"
-                      action="${pageContext.request.contextPath }/customer/list.action"
+                      action="${pageContext.request.contextPath }/api/Customer/list"
                       method="post">
                     <div class="form-group">
                         <label for="name">客户名称</label> <input type="text"
@@ -177,7 +177,7 @@
                     </table>
                     <div class="col-md-12 text-right">
                         <owen:page
-                                url="${pageContext.request.contextPath }/customer/list.action"/>
+                                url="${pageContext.request.contextPath }/api/Customer/list"/>
                     </div>
                     <!-- /.panel-body -->
                 </div>
@@ -372,9 +372,9 @@
                 </div>
                 <div class="form-group">
                     <label for="telephone">身份证</label> <input type="text"
-                                                               class="form-control" id="detailIdentity"
-                                                               value="${detailIdentity}"
-                                                               name="detailIdentity" disabled>
+                                                              class="form-control" id="detailIdentity"
+                                                              value="${detailIdentity}"
+                                                              name="detailIdentity" disabled>
                 </div>
                 <table class="table table-bordered table-striped">
                     <thead>
@@ -389,10 +389,10 @@
                     <tbody id="recordList">
                     </tbody>
                 </table>
-<%--                <div class="col-md-12 text-right">--%>
-<%--                    <owen:page--%>
-<%--                            url="${pageContext.request.contextPath }/customer/getDetail.action"/>--%>
-<%--                </div>--%>
+                <div class="col-md-12 text-right">
+                    <owen:page
+                            url="${pageContext.request.contextPath }/api/Customer/list"/>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
@@ -424,7 +424,7 @@
     function editCustomer(id) {
         $.ajax({
             type: "get",
-            url: "<%=basePath%>customer/edit.action",
+            url: "<%=basePath%>api/Customer/get",
             data: {"id": id},
             success: function (data) {
                 $("#edit_id").val(data.id);
@@ -436,26 +436,38 @@
     }
 
     function updateCustomer() {
-        $.post("<%=basePath%>customer/update.action", $("#edit_customer_form").serialize(), function (data) {
-            alert("客户信息更新成功！");
-            window.location.reload();
+        $.post("<%=basePath%>api/Customer/update", $("#edit_customer_form").serialize(), function (data) {
+            if (JSON.parse(data)) {
+                alert("客户信息更新成功！");
+                window.location.reload();
+            } else {
+                alert("客户信息更新失败！");
+            }
         });
     }
 
     function deleteCustomer(id) {
         if (confirm('确实要删除该客户吗?')) {
-            $.post("<%=basePath%>customer/delete.action", {"id": id}, function (data) {
-                alert("客户删除成功！");
-                window.location.reload();
+            $.post("<%=basePath%>api/Customer/delete", {"id": id}, function (data) {
+                if (JSON.parse(data)) {
+                    alert("客户删除成功！");
+                    window.location.reload();
+                } else {
+                    alert("客户删除失败！该客户正在入住房间！");
+                }
             });
         }
     }
 
 
     function addCustomer() {
-        $.post("<%=basePath%>customer/add.action", $("#add_customer_form").serialize(), function (data) {
-            alert("客户信息添加成功！");
-            window.location.reload();
+        $.post("<%=basePath%>api/Customer/add", $("#add_customer_form").serialize(), function (data) {
+            if (JSON.parse(data)) {
+                alert("客户信息添加成功！");
+                window.location.reload();
+            } else {
+                alert("客户信息添加失败！");
+            }
         });
     }
 
@@ -468,7 +480,7 @@
     function getLiveIn(id) {
         $.ajax({
             type: "get",
-            url: "<%=basePath%>customer/getLiveIn.action",
+            url: "<%=basePath%>api/Customer/getLiveIn",
             data: {"id": id},
             success: function (data) {
                 $("#get_roomNumber").val(data.roomNumber);
@@ -483,19 +495,19 @@
     }
 
     function formatDate(timestamp) {
-        if (timestamp == null || timestamp === ""){
+        if (timestamp == null || timestamp === "") {
             return "空";
         }
-    	var now = new Date(timestamp);
-    	return moment(now).format("YYYY-MM-DDTHH:mm");
+        var now = new Date(timestamp);
+        return moment(now).format("YYYY-MM-DDTHH:mm");
     }
 
     function updateLiveIn() {
-        $.post("<%=basePath%>customer/updateLiveIn.action", $("#get_living_form").serialize(), function (data) {
-            if (data){
+        $.post("<%=basePath%>api/Customer/updateLiveIn", $("#get_living_form").serialize(), function (data) {
+            if (data) {
                 alert("入住信息更新成功！");
                 window.location.reload();
-            }else {
+            } else {
                 alert("入住失败，房间正在维修中...");
             }
         });
@@ -504,7 +516,7 @@
     function getDetail(id) {
         $.ajax({
             type: "get",
-            url: "<%=basePath%>customer/getDetail.action",
+            url: "<%=basePath%>api/Customer/getDetail",
             data: {"id": id},
             success: function (data) {
                 // console.log("data: "+JSON.stringify(data));
@@ -512,7 +524,7 @@
                 $("#detailTelephone").val(data.telephone);
                 $("#detailIdentity").val(data.identity);
                 var finalTable = "";
-                for(var i = 0; i < data.recordList.rows.length; i ++){
+                for (var i = 0; i < data.recordList.rows.length; i++) {
                     var dataList = [];
                     var obj = data.recordList.rows[i];
                     dataList[0] = obj.roomNumber;
@@ -521,16 +533,16 @@
                     dataList[3] = obj.breakfast;
                     dataList[4] = obj.price;
                     // console.log("dataList: "+JSON.stringify(dataList));
-                    finalTable +=creatTable(dataList)
+                    finalTable += createTable(dataList)
                 }
-                document.getElementById("recordList").innerHTML=finalTable;
+                document.getElementById("recordList").innerHTML = finalTable;
             }
         });
     }
 
-    function creatTable(data){
+    function createTable(data) {
         var tableData = "<tr>";
-        for(var i = 0; i < data.length; i++){
+        for (var i = 0; i < data.length; i++) {
             tableData += "<td>" + data[i] + "</td>"
         }
         tableData += "</tr>";
@@ -539,11 +551,11 @@
 
     function outRoom(id) {
         if (confirm('确实要办理退房吗?')) {
-            $.post("<%=basePath%>customer/getOutInfo.action", {"id": id}, function (data) {
-                if (JSON.parse(data.result)){
+            $.post("<%=basePath%>api/Customer/outRoom", {"id": id}, function (data) {
+                if (JSON.parse(data.result)) {
                     alert(data.message);
                     window.location.reload();
-                }else {
+                } else {
                     alert(data.message);
                 }
             });
