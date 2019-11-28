@@ -167,7 +167,7 @@
                                        data-toggle="modal" data-target="#getLiveIn"
                                        onclick="getLiveIn(${row.id})">办理入住</a>
                                     <a href="#" class="btn btn-info btn-xs"
-                                       onclick="outRoom(${row.id})">办理退房</a>
+                                       onclick="outRoom(${row.id}, ${row.roomNumber})">办理退房</a>
 
                                 </td>
 
@@ -549,9 +549,13 @@
         return tableData;
     }
 
-    function outRoom(id) {
+    function outRoom(id, roomNumber) {
+        if (roomNumber === undefined){
+            alert("该客户并未入住客房");
+            return
+        }
         if (confirm('确实要办理退房吗?')) {
-            $.post("<%=basePath%>api/Customer/outRoom", {"id": id}, function (data) {
+            $.post("<%=basePath%>api/Customer/getOutOfRoom", {"id": id, "roomNumber": roomNumber}, function (data) {
                 if (JSON.parse(data.result)) {
                     alert(data.message);
                     window.location.reload();

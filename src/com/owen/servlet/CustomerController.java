@@ -1,5 +1,6 @@
 package com.owen.servlet;
 
+import com.alibaba.fastjson.JSONObject;
 import com.owen.entity.Customer;
 import com.owen.page.Page;
 import com.owen.utils.JDBCConnection;
@@ -16,8 +17,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -194,36 +193,9 @@ public class CustomerController {
         // 解决返回中文乱码
         response.setContentType("text/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
-
         int id = Integer.parseInt(request.getParameter("id"));
-        Connection connection = null;
         PrintWriter out = response.getWriter();
-        try {
-            connection = JDBCConnection.getConnection();
-            connection.setAutoCommit(true);
-            String sql = "select hc.id as id, hr.id as recordId, hr.inTime as inTime, hr.outTime as outTime, hr.breakfast as breakfast, h.roomNumber as roomNumber, hr.price as price, h.id as roomId from" +
-                    "((hotel_customer as hc inner join hotel as h on hc.id = " + id + " and hc.roomId = h.id) left join hotel_record as hr on hr.customerId = hc.id and hr.roomId = h.id) order by recordId desc limit 1";
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            boolean hasLived = false;
-            while (resultSet.next()) {
-                hasLived = true;
-                String roomNumber = resultSet.getString("roomNumber");
-                Date inTime = resultSet.getTimestamp("inTime");
-                Date outTime = resultSet.getTimestamp("outTime");
-                String breakfast = resultSet.getString("breakfast");
-                int roomId = resultSet.getInt("roomId");
-                int recordId = resultSet.getInt("recordId");
-                out.println("{\"roomId\":" + roomId + ",\"recordId\":" + recordId + ",\"roomNumber\":" + "\"" + roomNumber + "\"" + ",\"inTime\":" + "\"" + inTime + "\"" + ",\"outTime\":" + "\"" + outTime + "\"" + ",\"breakfast\":" + "\"" + breakfast + "\"" + ",\"id\":" + id + "}");
-            }
-            if (!hasLived) {
-                out.println("{\"roomId\":" + "0" + ",\"recordId\":" + "0" + ",\"roomNumber\":" + "\"" + "" + "\"" + ",\"inTime\":" + "\"" + null + "\"" + ",\"outTime\":" + "\"" + null + "\"" + ",\"breakfast\":" + "\"" + "" + "\"" + ",\"id\":" + id + "}");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            JDBCConnection.close(connection);
-        }
+        out.println(getLiveInfo(id));
     }
 
     // 更新入住信息
@@ -295,6 +267,62 @@ public class CustomerController {
         out.println("{\"result\":true, \"msg\": \"入住更新成功！\"}");
     }
 
+    // 办理退房
+    public void getOutOfRoom(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // 解决返回中文乱码
+        response.setContentType("text/json;charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        PrintWriter out = response.getWriter();
+        JSONObject liveInInfo = JSONObject.parseObject(getLiveInfo(id));
+        Connection connection = null;
+        boolean needUpdateOutTime = false;
+        Date now = new Date();
+        double days = 0;
+        if (liveInInfo.getTimestamp("outTime") != null) {
+            days = (liveInInfo.getTimestamp("outTime").getTime() - liveInInfo.getTimestamp("inTime").getTime()) / (float) (1000 * 60 * 60 * 24);
+        } else {
+            days = (now.getTime() - liveInInfo.getTimestamp("inTime").getTime()) / (float) (1000 * 60 * 60 * 24);
+            needUpdateOutTime = true;
+        }
+        JSONObject resultObj = new JSONObject();
+        if (days <= 0) {
+            resultObj.put("result", false);
+            resultObj.put("message", "退房失败：出错！入住时间大于或等于离开时间！");
+            out.println(resultObj.toString());
+        }
+        double money = 0;
+        if (days > Math.floor(days)) {
+            money = Math.floor(days) * liveInInfo.getIntValue("price");
+        } else {
+            money = days * liveInInfo.getIntValue("price");
+        }
+        resultObj.put("message", "退房成功：总消费：" + money + "元！");
+        resultObj.put("result", true);
+
+        try {
+            connection = JDBCConnection.getConnection();
+            connection.setAutoCommit(false);
+            PreparedStatement preparedStatement = connection.prepareStatement("update `hotel_customer` set `roomId` = 0 where `id` = " + id);
+            preparedStatement.execute();
+            if (needUpdateOutTime) {
+                preparedStatement = connection.prepareStatement("update `hotel_record` set `outTime` = " + "\"" + getTimeString(now) + "\"" + " where id = " + liveInInfo.getIntValue("recordId"));
+                preparedStatement.execute();
+            }
+            connection.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            resultObj.put("result", false);
+            resultObj.put("message", "退房失败，请联系系统管理员");
+            out.println(resultObj.toString());
+            return;
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        out.println(resultObj.toString());
+    }
+
     private String buildGetterMethod(String fieldName) {
         String firstLetter = fieldName.substring(0, 1).toUpperCase();
         String suffix = fieldName.substring(1);
@@ -334,20 +362,6 @@ public class CustomerController {
         return customer;
     }
 
-    private Date timeStrToDate(String timeString) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        try {
-            assert timeString != null;
-            if (!timeString.equals("")) {
-                timeString = timeString.replaceAll("T", " ");
-            }
-            return dateFormat.parse(timeString);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     private ArrayList<Object> getRoomDateByRoomNumber(Connection connection, String roomNumber) throws SQLException {
         String getRoomSql = "select `id`, `price`, `status` from `hotel` where `roomNumber` = " + roomNumber;
         PreparedStatement preparedStatement = connection.prepareStatement(getRoomSql);
@@ -366,4 +380,38 @@ public class CustomerController {
         resultList.add(status);
         return resultList;
     }
+
+    private String getLiveInfo(int id) {
+        Connection connection = null;
+        String data = "{\"roomId\":" + "0" + ",\"recordId\":" + "0" + ",\"roomNumber\":" + "\"" + "" + "\"" + ",\"inTime\":" + "\"" + null + "\"" + ",\"outTime\":" + "\"" + null + "\"" + ",\"breakfast\":" + "\"" + "" + "\"" + ",\"id\":" + id + "}";
+        try {
+            connection = JDBCConnection.getConnection();
+            connection.setAutoCommit(true);
+            String sql = "select hc.id as id, hr.id as recordId, hr.inTime as inTime, hr.outTime as outTime, hr.breakfast as breakfast, h.roomNumber as roomNumber, hr.price as price, h.id as roomId from" +
+                    "((hotel_customer as hc inner join hotel as h on hc.id = " + id + " and hc.roomId = h.id) left join hotel_record as hr on hr.customerId = hc.id and hr.roomId = h.id) order by recordId desc limit 1";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String roomNumber = resultSet.getString("roomNumber");
+                Date inTime = resultSet.getTimestamp("inTime");
+                Date outTime = resultSet.getTimestamp("outTime");
+                String breakfast = resultSet.getString("breakfast");
+                int roomId = resultSet.getInt("roomId");
+                int recordId = resultSet.getInt("recordId");
+                int price = resultSet.getInt("price");
+                data = "{\"roomId\":" + roomId + ",\"recordId\":" + recordId + ",\"roomNumber\":" + "\"" + roomNumber + "\"" + ",\"inTime\":" + "\"" + inTime + "\"" + ",\"outTime\":" + "\"" + outTime + "\"" + ",\"breakfast\":" + "\"" + breakfast + "\"" + ",\"id\":" + id + ",\"price\":" + price + "}";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        return data;
+    }
+
+    private String getTimeString(Date date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        return simpleDateFormat.format(date);
+    }
+
 }
