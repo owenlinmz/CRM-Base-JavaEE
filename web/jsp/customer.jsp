@@ -524,9 +524,9 @@
                 $("#detailTelephone").val(data.telephone);
                 $("#detailIdentity").val(data.identity);
                 var finalTable = "";
-                for (var i = 0; i < data.recordList.rows.length; i++) {
+                for (var i = 0; i < data.recordList.length; i++) {
                     var dataList = [];
-                    var obj = data.recordList.rows[i];
+                    var obj = data.recordList[i];
                     dataList[0] = obj.roomNumber;
                     dataList[1] = formatDate(obj.inTime);
                     dataList[2] = formatDate(obj.outTime);

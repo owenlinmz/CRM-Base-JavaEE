@@ -1,5 +1,6 @@
 package com.owen.servlet;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.owen.entity.Customer;
 import com.owen.page.Page;
@@ -112,32 +113,10 @@ public class CustomerController {
 
     // 获取单个客户信息
     public void get(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // 解决返回中文乱码
-        response.setContentType("text/json;charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
+        resolveChinese(response);
 
-        int id = Integer.parseInt(request.getParameter("id"));
-        Connection connection = null;
         PrintWriter out = response.getWriter();
-        try {
-            connection = JDBCConnection.getConnection();
-            String sql = String.format("select * from hotel_customer where id = %d", id);
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                String name = resultSet.getString(2);
-                String identity = resultSet.getString(3);
-                String telephone = resultSet.getString(4);
-                int roomId = resultSet.getInt(5);
-                Customer customer = new Customer(id, name, identity, telephone, roomId, null);
-                out.println(customer.toString());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            out.println("false");
-        } finally {
-            JDBCConnection.close(connection);
-        }
+        out.println(getCustomer(Integer.parseInt(request.getParameter("id"))));
     }
 
     // 修改客户
@@ -190,9 +169,7 @@ public class CustomerController {
 
     // 获取当前入住信息
     public void getLiveIn(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // 解决返回中文乱码
-        response.setContentType("text/json;charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
+        resolveChinese(response);
         int id = Integer.parseInt(request.getParameter("id"));
         PrintWriter out = response.getWriter();
         out.println(getLiveInfo(id));
@@ -200,9 +177,7 @@ public class CustomerController {
 
     // 更新入住信息
     public void updateLiveIn(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // 解决返回中文乱码
-        response.setContentType("text/json;charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
+        resolveChinese(response);
 
         int id = Integer.parseInt(request.getParameter("id"));
         String inTime = request.getParameter("inTime");
@@ -269,7 +244,7 @@ public class CustomerController {
 
     // 办理退房
     public void getOutOfRoom(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // 解决返回中文乱码
+
         response.setContentType("text/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");
 
@@ -322,6 +297,36 @@ public class CustomerController {
         }
         out.println(resultObj.toString());
     }
+
+    // 获取客户详情
+    public void getDetail(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        resolveChinese(response);
+        int id = Integer.parseInt(request.getParameter("id"));
+        JSONObject customerObj = JSONObject.parseObject(getCustomer(id));
+        ArrayList<JSONObject> recordList = new ArrayList<>();
+        customerObj.put("recordList", recordList);
+        Connection connection = null;
+        PrintWriter out = response.getWriter();
+        try {
+            connection = JDBCConnection.getConnection();
+            PreparedStatement preparedStatement = connection.prepareStatement("select hr.inTime, hr.outTime, hr.breakfast, hr.price, h.roomNumber from hotel_record as hr inner join hotel as h on hr.roomId = h.id and customerId = " + id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                JSONObject record = new JSONObject();
+                record.put("inTime", resultSet.getDate("inTIme"));
+                record.put("outTime", resultSet.getDate("outTime"));
+                record.put("roomNumber", resultSet.getString("roomNumber"));
+                record.put("breakfast", resultSet.getString("breakfast"));
+                record.put("price", resultSet.getInt("price"));
+                recordList.add(record);
+            }
+            out.println(customerObj.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     private String buildGetterMethod(String fieldName) {
         String firstLetter = fieldName.substring(0, 1).toUpperCase();
@@ -414,4 +419,33 @@ public class CustomerController {
         return simpleDateFormat.format(date);
     }
 
+    private String getCustomer(int id) {
+        Connection connection = null;
+        Customer customer = new Customer();
+        try {
+            connection = JDBCConnection.getConnection();
+            String sql = String.format("select * from hotel_customer where id = %d", id);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                customer.setName(resultSet.getString("name"));
+                customer.setIdentity(resultSet.getString("identity"));
+                customer.setTelephone(resultSet.getString("telephone"));
+                customer.setRoomId(resultSet.getInt("roomId"));
+                customer.setId(id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "false";
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        return customer.toString();
+    }
+
+    private void resolveChinese(HttpServletResponse response) {
+        // 解决返回中文乱码
+        response.setContentType("text/json;charset=UTF-8");
+        response.setCharacterEncoding("UTF-8");
+    }
 }
