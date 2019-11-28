@@ -327,7 +327,6 @@ public class CustomerController {
 
     }
 
-
     private String buildGetterMethod(String fieldName) {
         String firstLetter = fieldName.substring(0, 1).toUpperCase();
         String suffix = fieldName.substring(1);
@@ -414,7 +413,7 @@ public class CustomerController {
         return data;
     }
 
-    private String getTimeString(Date date) {
+    static String getTimeString(Date date) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         return simpleDateFormat.format(date);
     }
@@ -443,7 +442,7 @@ public class CustomerController {
         return customer.toString();
     }
 
-    private void resolveChinese(HttpServletResponse response) {
+    static void resolveChinese(HttpServletResponse response) {
         // 解决返回中文乱码
         response.setContentType("text/json;charset=UTF-8");
         response.setCharacterEncoding("UTF-8");

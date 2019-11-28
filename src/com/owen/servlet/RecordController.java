@@ -1,5 +1,9 @@
 package com.owen.servlet;
 
+import java.io.PrintWriter;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.owen.entity.Record;
 import com.owen.page.Page;
 import com.owen.utils.JDBCConnection;
@@ -89,8 +93,101 @@ public class RecordController {
     }
 
     // 入住详情
-    public void get(HttpServletRequest request, HttpServletResponse response) {
+    public void get(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CustomerController.resolveChinese(response);
+        String roomNumber = request.getParameter("roomNumber");
+        PrintWriter out = response.getWriter();
+        int id = Integer.parseInt(request.getParameter("id"));
+        ArrayList<JSONObject> recordList = getRecordsByRoomNumber(roomNumber);
+        Date realInTime = null;
+        Date realOutTime = null;
+        for (JSONObject record : recordList) {
+            if (record.getIntValue("id") == id) {
+                realInTime = record.getTimestamp("inTime");
+                realOutTime = record.getTimestamp("outTime");
+                break;
+            }
+        }
 
+        JSONObject result = new JSONObject();
+        ArrayList<JSONObject> finalList = new ArrayList<>();
+        if (realInTime == null) {
+            out.println(result.toString());
+            return;
+        }
+        // 计算入住时间和离开时间
+        Date finalInTime = null;
+        Date finalOutTime = null;
+        for (JSONObject record : recordList) {
+            if (record.getTimestamp("outTime") != null && record.getTimestamp("outTime").before(realInTime)) {
+                continue;
+            } else if (realOutTime != null && record.getTimestamp("inTime").after(realOutTime)) {
+                continue;
+            }
+            if (record.getTimestamp("inTime") != null) {
+                finalInTime = record.getTimestamp("inTime");
+            }
+            if (record.getTimestamp("outTime") != null) {
+                finalOutTime = record.getTimestamp("outTime");
+            }
+            finalList.add(record);
+        }
+        if (finalList.isEmpty() || finalInTime == null) {
+            out.println(result.toString());
+            return;
+        }
+        ArrayList<String> nameList = new ArrayList<>();
+        for (JSONObject record : finalList) {
+            if (finalInTime.after(record.getTimestamp("inTime"))) {
+                finalInTime = record.getTimestamp("inTime");
+            }
+
+            // 如果房间内仍有客户未离开，则离开时间为空
+            if (record.getTimestamp("outTime") == null) {
+                finalOutTime = null;
+            }
+            if (finalOutTime != null && record.getTimestamp("outTime") != null && record.getTimestamp("outTime").after(finalOutTime)) {
+                finalOutTime = record.getTimestamp("outTime");
+            }
+            nameList.add(record.getString("name"));
+        }
+        result.put("nameList", joinListToStr(nameList, ", "));
+        result.put("inTime", CustomerController.getTimeString(realInTime));
+        result.put("roomNumber", finalList.get(0).getString("roomNumber"));
+        result.put("type", finalList.get(0).getString("roomNumber"));
+        if (finalOutTime != null) {
+            result.put("outTime", CustomerController.getTimeString(realOutTime));
+        } else {
+            result.put("outTime", "空");
+        }
+        out.println(result.toString());
+    }
+
+    // 通过房间号获取入住记录
+    private ArrayList getRecordsByRoomNumber(String roomNumber) {
+        Connection connection = null;
+        ArrayList<JSONObject> recordList = new ArrayList<>();
+        try {
+            connection = JDBCConnection.getConnection();
+            String sql = "select hr.*, h.roomNumber as roomNumber, hc.name as name, h.type as `type` from ((hotel_record as hr inner  join  hotel as h on h.roomNumber = " + roomNumber + " and h.id = hr.roomId inner join hotel_customer as hc on hr.customerId = hc.id))";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                JSONObject record = new JSONObject();
+                record.put("inTime", resultSet.getTimestamp("inTime"));
+                record.put("outTime", resultSet.getTimestamp("outTime"));
+                record.put("roomNumber", resultSet.getString("roomNumber"));
+                record.put("name", resultSet.getString("name"));
+                record.put("type", resultSet.getString("type"));
+                record.put("id", resultSet.getInt("id"));
+                recordList.add(record);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            JDBCConnection.close(connection);
+        }
+        return recordList;
     }
 
     private String joinListToStr(ArrayList<String> strList, String str) {
