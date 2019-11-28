@@ -41,7 +41,7 @@ public class CustomerController {
             byte[] buf = value.getBytes("iso8859-1");
             value = new String(buf, "utf-8");
             if (!value.equals("")) {
-                whereList.add(String.format("%s like '%%%s%%'", name, value));
+                whereList.add(String.format("`%s` like '%%%s%%'", name, value));
             }
         }
         // 组装where参数

@@ -40,7 +40,7 @@ public class RecordController {
             byte[] buf = value.getBytes("iso8859-1");
             value = new String(buf, "utf-8");
             if (!value.equals("")) {
-                whereList.add(String.format("%s like '%%%s%%'", name, value));
+                whereList.add(String.format("`%s` like '%%%s%%'", name, value));
             }
         }
         // 组装where参数
@@ -73,10 +73,10 @@ public class RecordController {
                 Record record = new Record(id, inTime, outTime, breakfast, price, type, name, roomNumber, telephone);
                 list.add(record);
             }
-            preparedStatement = connection.prepareStatement(String.format("select count(1) from hotel_record%s", whereStr));
+            preparedStatement = connection.prepareStatement(String.format("select count(1), hc.name as name, h.roomNumber as roomNumber, h.type as `type` from ((hotel_record as hr left join hotel_customer as hc on hr.customerId = hc.id) left join hotel as h on hr.roomId = h.id)%s", whereStr));
             ResultSet countResult = preparedStatement.executeQuery();
             while (countResult.next()) {
-                count = countResult.getInt(1);
+                count = countResult.getInt("count(1)");
             }
         } catch (SQLException e) {
             e.printStackTrace();
