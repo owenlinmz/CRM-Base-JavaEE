@@ -69,7 +69,7 @@ public class RecordController {
                 Record record = new Record(id, inTime, outTime, breakfast, price, type, name,  roomNumber, telephone);
                 list.add(record);
             }
-            preparedStatement = connection.prepareStatement(String.format("select count(1) from hotel%s", whereStr));
+            preparedStatement = connection.prepareStatement(String.format("select count(1) from hotel_record%s", whereStr));
             ResultSet countResult = preparedStatement.executeQuery();
             while (countResult.next()) {
                 count = countResult.getInt(1);

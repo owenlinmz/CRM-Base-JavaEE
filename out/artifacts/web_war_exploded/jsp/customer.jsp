@@ -504,11 +504,11 @@
 
     function updateLiveIn() {
         $.post("<%=basePath%>api/Customer/updateLiveIn", $("#get_living_form").serialize(), function (data) {
-            if (data) {
-                alert("入住信息更新成功！");
+            if (data.result) {
+                alert(data.msg);
                 window.location.reload();
             } else {
-                alert("入住失败，房间正在维修中...");
+                alert(data.msg);
             }
         });
     }
