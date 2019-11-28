@@ -3,7 +3,7 @@
 <%@ page trimDirectiveWhitespaces="true" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="owen" uri="owenlin" %>
+<%@ taglib prefix="owen" uri="owenLin" %>
 <%
     String path = request.getContextPath();
     String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
@@ -80,11 +80,11 @@
         <div class="navbar-default sidebar" role="navigation">
             <div class="sidebar-nav navbar-collapse">
                 <ul class="nav" id="side-menu">
-                    <li><a href="${pageContext.request.contextPath}/customer/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Customer/list"
                            class="active"><i class="fa fa-edit fa-fw"></i> 客户管理</a></li>
-                    <li><a href="${pageContext.request.contextPath}/room/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Room/list"
                            class="active"><i class="fa fa-dashboard fa-fw"></i> 客房管理</a></li>
-                    <li><a href="${pageContext.request.contextPath}/record/list"
+                    <li><a href="${pageContext.request.contextPath}/api/Record/list"
                            class="active"><i class="fa fa-dashboard fa-fw"></i> 入住信息管理</a></li>
                 </ul>
             </div>
@@ -104,7 +104,7 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <form class="form-inline"
-                      action="${pageContext.request.contextPath}/record/list"
+                      action="${pageContext.request.contextPath}/api/Record/list"
                       method="post">
                     <div class="form-group">
                         <label for="nameFilter">客户姓名</label> <input type="text"
@@ -168,7 +168,7 @@
                     </table>
                     <div class="col-md-12 text-right">
                         <owen:page
-                                url="${pageContext.request.contextPath }/record/list.action"/>
+                                url="${pageContext.request.contextPath }/api/Record/list"/>
                     </div>
                     <!-- /.panel-body -->
                 </div>
@@ -259,7 +259,7 @@
     function getDetail(id, roomNumber) {
         $.ajax({
             type: "get",
-            url: "<%=basePath%>record/getDetail.action",
+            url: "<%=basePath%>api/Record/get",
             data: {"id": id, "roomNumber": roomNumber},
             success: function (data) {
                 $("#detail_inTime").val(data.inTime);
