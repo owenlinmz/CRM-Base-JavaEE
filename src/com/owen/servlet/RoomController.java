@@ -1,13 +1,9 @@
 package com.owen.servlet;
 
 import com.owen.page.Page;
-import com.sun.deploy.net.HttpResponse;
-import jdk.nashorn.internal.scripts.JD;
-import com.owen.BaseServlet;
 import com.owen.entity.Room;
 import com.owen.utils.JDBCConnection;
 
-import javax.servlet.Filter;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -29,7 +25,7 @@ import java.util.List;
 public class RoomController extends HttpServlet {
 
     // 展示客房信息
-    public void list(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException, ServletException, InvocationTargetException, IllegalAccessException {
+    public void list(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Page<Room> page = new Page<>(1, 5);
         // 获取查询客房的参数
         Enumeration<String> parameterNames = request.getParameterNames();
@@ -98,7 +94,7 @@ public class RoomController extends HttpServlet {
     }
 
     // 添加客房
-    public void add(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
+    public void add(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InvocationTargetException, IOException {
         Room room = getParamFromReq(request);
         Connection connection = null;
         PrintWriter out = response.getWriter();
@@ -172,7 +168,7 @@ public class RoomController extends HttpServlet {
     }
 
     // 变更客房状态
-    public void changeStatus(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException {
+    public void changeStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         String status = request.getParameter("status");
         Connection connection = null;

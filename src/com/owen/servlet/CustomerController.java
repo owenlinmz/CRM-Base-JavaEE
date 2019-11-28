@@ -23,7 +23,7 @@ import java.util.List;
 
 public class CustomerController {
     // 展示客户信息
-    public void list(HttpServletRequest request, HttpServletResponse response) throws IOException, SQLException, ServletException, InvocationTargetException, IllegalAccessException {
+    public void list(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         Page<Customer> page = new Page<>(1, 5);
         // 获取查询客户的参数
         Enumeration<String> parameterNames = request.getParameterNames();
@@ -91,7 +91,7 @@ public class CustomerController {
     }
 
     // 添加客户
-    public void add(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InstantiationException, InvocationTargetException, IOException {
+    public void add(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InvocationTargetException, IOException {
         Customer customer = getParamFromReq(request);
         Connection connection = null;
         PrintWriter out = response.getWriter();
