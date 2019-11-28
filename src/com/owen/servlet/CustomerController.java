@@ -216,10 +216,10 @@ public class CustomerController {
             connection.setAutoCommit(false);
             // 客户新入住
             if (roomId == 0) {
-                String insertSql = "insert into `hotel_record` (`customerId`, `roomId`, `inTime`, `outTime`, `breakfast`, `price`) values (" + id + "," + roomId + "," + inTime + "," + outTime + ",\"" + breakfast + "\"," + price + ")";
+                String insertSql = "insert into `hotel_record` (`customerId`, `roomId`, `inTime`, `outTime`, `breakfast`, `price`) values (" + id + "," + newRoomId + "," + inTime + "," + outTime + ",\"" + breakfast + "\"," + price + ")";
                 PreparedStatement preparedStatement = connection.prepareStatement(insertSql);
                 preparedStatement.execute();
-                preparedStatement = connection.prepareStatement("update hotel_customer set `roomId` = " + roomId + " where `id` = " + id);
+                preparedStatement = connection.prepareStatement("update hotel_customer set `roomId` = " + newRoomId + " where `id` = " + id);
                 preparedStatement.execute();
             } else {
                 // 旧客户更新入住信息
@@ -313,8 +313,8 @@ public class CustomerController {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
                 JSONObject record = new JSONObject();
-                record.put("inTime", resultSet.getDate("inTIme"));
-                record.put("outTime", resultSet.getDate("outTime"));
+                record.put("inTime", resultSet.getTimestamp("inTIme"));
+                record.put("outTime", resultSet.getTimestamp("outTime"));
                 record.put("roomNumber", resultSet.getString("roomNumber"));
                 record.put("breakfast", resultSet.getString("breakfast"));
                 record.put("price", resultSet.getInt("price"));

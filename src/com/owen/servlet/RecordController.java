@@ -66,7 +66,7 @@ public class RecordController {
                 String breakfast = resultSet.getString("breakfast");
                 int price = resultSet.getInt("price");
                 String telephone = resultSet.getString("telephone");
-                Record record = new Record(id, inTime, outTime, breakfast, price, type, name,  roomNumber, telephone);
+                Record record = new Record(id, inTime, outTime, breakfast, price, type, name, roomNumber, telephone);
                 list.add(record);
             }
             preparedStatement = connection.prepareStatement(String.format("select count(1) from hotel_record%s", whereStr));
@@ -86,6 +86,11 @@ public class RecordController {
         page.setRows(list);
         servletContext.setAttribute("page", page);
         request.getRequestDispatcher("/jsp/record.jsp").forward(request, response);
+    }
+
+    // 入住详情
+    public void get(HttpServletRequest request, HttpServletResponse response) {
+
     }
 
     private String joinListToStr(ArrayList<String> strList, String str) {
