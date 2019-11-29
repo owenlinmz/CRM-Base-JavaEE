@@ -152,11 +152,11 @@ public class RecordController {
             nameList.add(record.getString("name"));
         }
         result.put("nameList", joinListToStr(nameList, ", "));
-        result.put("inTime", CustomerController.getTimeString(realInTime));
+        result.put("inTime", CustomerController.getTimeString(finalInTime));
         result.put("roomNumber", finalList.get(0).getString("roomNumber"));
         result.put("type", finalList.get(0).getString("roomNumber"));
         if (finalOutTime != null) {
-            result.put("outTime", CustomerController.getTimeString(realOutTime));
+            result.put("outTime", CustomerController.getTimeString(finalOutTime));
         } else {
             result.put("outTime", "空");
         }
